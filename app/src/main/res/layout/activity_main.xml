@@ -31,7 +31,8 @@
         android:max="100"
         android:progress="0"
         android:progressDrawable="@drawable/custom_progressbar_drawable"
-        android:secondaryProgress="0" />
+        android:secondaryProgress="0"
+        android:visibility="invisible"/>
 
     <TextView
         android:id="@+id/progressLabel"

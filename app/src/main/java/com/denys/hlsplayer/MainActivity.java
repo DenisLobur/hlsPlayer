@@ -1,5 +1,6 @@
 package com.denys.hlsplayer;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -16,8 +17,8 @@ public class MainActivity extends AppCompatActivity {
     private int pStatus = 0;
     private Handler handler = new Handler();
     private ImageButton playPauseButton;
-    private Thread fetchingThread;
     private PlayerState currentState;
+    private MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,37 +31,30 @@ public class MainActivity extends AppCompatActivity {
 
         currentState = PlayerState.UNINITIALIZED;
         changePlayerState(currentState);
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.audio_sample);
+
+        mediaPlayer.setOnCompletionListener(mp -> {
+            pStatus = 0;
+            currentState = PlayerState.COMPLITED;
+            changePlayerState(currentState);
+        });
+
         playPauseButton.setOnClickListener(v -> {
-            if (currentState == PlayerState.UNINITIALIZED) {
+            if (currentState == PlayerState.UNINITIALIZED || currentState == PlayerState.COMPLITED) {
                 currentState = PlayerState.FETCHING;
-                fetchingThread.start();
+                progressBar.setVisibility(View.VISIBLE);
+                fetchAudio().start();
             } else if (currentState == PlayerState.PLAYING) {
                 currentState = PlayerState.PAUSED;
             } else {
                 currentState = PlayerState.PLAYING;
             }
+            playMusic(currentState);
             changePlayerState(currentState);
         });
 
-        fetchingThread = new Thread(() -> {
-            while (pStatus <= 100) {
-                handler.post(() -> {
-                    progressBar.setProgress(pStatus);
-                    progressLabel.setText(pStatus + " %");
-                });
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                pStatus++;
-            }
 
-            handler.post(() -> {
-                currentState = PlayerState.PLAYING;
-                changePlayerState(currentState);
-            });
-        });
     }
 
     private void changePlayerState(PlayerState state) {
@@ -70,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
                 progressLabel.setText(R.string.current_state_uninitialized);
                 break;
             case FETCHING:
+                playPauseButton.setVisibility(View.INVISIBLE);
                 progressLabel.setText(R.string.current_state_fetching);
-                //progressLabel
                 break;
             case PLAYING:
                 playPauseButton.setImageResource(R.drawable.round_pause);
@@ -82,11 +76,47 @@ public class MainActivity extends AppCompatActivity {
                 progressLabel.setText(R.string.current_state_paused);
                 break;
             case COMPLITED:
-                //playButton
+                playPauseButton.setImageResource(R.drawable.round_play);
                 progressLabel.setText(R.string.current_state_completed);
             default:
-                //fetching, completed
+                //
                 break;
         }
+    }
+
+    private void playMusic(PlayerState state) {
+        if (state == PlayerState.PLAYING) {
+            mediaPlayer.start();
+        } else if(state == PlayerState.PAUSED) {
+            mediaPlayer.pause();
+        }
+    }
+
+    private Thread fetchAudio(){
+        Thread fetchingThread = new Thread(() -> {
+            while (pStatus <= 100) {
+                handler.post(() -> {
+                    progressBar.setProgress(pStatus);
+                    String txt = String.format(getString(R.string.current_state_fetching), pStatus);
+                    progressLabel.setText(txt);
+                });
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                pStatus++;
+            }
+
+            handler.post(() -> {
+                progressBar.setVisibility(View.INVISIBLE);
+                playPauseButton.setVisibility(View.VISIBLE);
+                currentState = PlayerState.PLAYING;
+                changePlayerState(currentState);
+                playMusic(currentState);
+            });
+        });
+
+        return fetchingThread;
     }
 }
