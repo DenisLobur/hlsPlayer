@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">HLSPlayer</string>
+    <string name="current_state_uninitialized">Uninitialized</string>
+    <string name="current_state_fetching">Fetching</string>
+    <string name="current_state_playing">Playing</string>
+    <string name="current_state_paused">Paused</string>
+    <string name="current_state_completed">Completed</string>
 </resources>
