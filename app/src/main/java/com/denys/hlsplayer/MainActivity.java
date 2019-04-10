@@ -3,16 +3,20 @@ package com.denys.hlsplayer;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.denys.hlsplayer.parser.PlayListParser;
@@ -38,14 +42,27 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
   private PlayerView playerView;
   private float xDelta;
   private float yDelta;
+  private int windowWidth;
+  private int windowHeight;
+  private Animation animation;
+  private RelativeLayout mainLayout;
 
-  @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+    mainLayout = findViewById(R.id.root_view);
+
+    Display display = getWindowManager().getDefaultDisplay();
+    Point size = new Point();
+    display.getSize(size);
+    windowWidth = size.x;
+    windowHeight = size.y;
 
     playerView = findViewById(R.id.player_view);
+
     playerView.setOnTouchListener(this);
+
+    animation = AnimationUtils.loadAnimation(this, R.anim.accel_deaccel_anim);
 
     verifyStoragePermissions(this);
 
@@ -83,8 +100,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
       playMusic(currentState);
       changePlayerState(currentState);
     });
-
-
   }
 
   private void changePlayerState(PlayerState state) {
@@ -162,26 +177,38 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
   @Override
   public boolean onTouch(View v, MotionEvent event) {
-    final int x = (int) event.getRawX();
-    final int y = (int) event.getRawY();
+    float newX;
+    float newY;
+    int lastAction;
+
     switch (event.getAction() & MotionEvent.ACTION_MASK) {
       case MotionEvent.ACTION_DOWN:
-        Log.d(TAG, "action down: x:=" + x + " y:= " + y);
-        xDelta = event.getRawX() - playerView.getTranslationX();
-        yDelta = event.getRawY() - playerView.getTranslationY();
+        xDelta = playerView.getX() - event.getRawX();
+        yDelta = playerView.getY() - event.getRawY();
+        lastAction = MotionEvent.ACTION_DOWN;
         break;
       case MotionEvent.ACTION_UP:
-        Log.d(TAG, "action up");
         break;
       case MotionEvent.ACTION_MOVE:
-        Log.d(TAG, "action move");
-        playerView.setTranslationX(event.getRawX() - xDelta);
-        playerView.setTranslationY(event.getRawY() - yDelta);
+        // anim here
+        playerView.setAnimation(animation);
+
+        newX = event.getRawX() + xDelta;
+        newY = event.getRawY() + yDelta;
+
+        if ((newX <= 0 || newX >= windowWidth - playerView.getWidth()) || (newY <= 0 || newY >= windowHeight - playerView.getHeight())) {
+          lastAction = MotionEvent.ACTION_MOVE;
+          break;
+        }
+
+        playerView.setX(newX);
+        playerView.setY(newY);
+        lastAction = MotionEvent.ACTION_MOVE;
+
         break;
 
     }
 
-    playerView.invalidate();
     return true;
 
   }
