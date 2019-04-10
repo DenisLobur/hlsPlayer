@@ -6,41 +6,47 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <View
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:layout_centerInParent="true"
-        android:background="@drawable/outer_shape"/>
+    <!--<View-->
+        <!--android:layout_width="150dp"-->
+        <!--android:layout_height="150dp"-->
+        <!--android:layout_centerInParent="true"-->
+        <!--android:background="@drawable/outer_shape"/>-->
 
-    <ImageButton
-        android:id="@+id/playPauseButton"
-        android:layout_width="96dp"
-        android:layout_height="96dp"
-        android:layout_centerInParent="true"
-        android:src="@drawable/round_play"
-        android:background="@android:color/transparent"
-        android:visibility="visible" />
+    <!--<ImageButton-->
+        <!--android:id="@+id/playPauseButton"-->
+        <!--android:layout_width="72dp"-->
+        <!--android:layout_height="72dp"-->
+        <!--android:layout_centerInParent="true"-->
+        <!--android:src="@drawable/round_play"-->
+        <!--android:background="@android:color/transparent"-->
+        <!--android:visibility="visible" />-->
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:layout_centerInParent="true"
-        android:indeterminate="false"
-        android:max="100"
-        android:progress="0"
-        android:progressDrawable="@drawable/custom_progressbar_drawable"
-        android:secondaryProgress="0"
-        android:visibility="invisible"/>
+    <!--<ProgressBar-->
+        <!--android:id="@+id/progressBar"-->
+        <!--style="?android:attr/progressBarStyleHorizontal"-->
+        <!--android:layout_width="150dp"-->
+        <!--android:layout_height="150dp"-->
+        <!--android:layout_centerInParent="true"-->
+        <!--android:indeterminate="false"-->
+        <!--android:max="100"-->
+        <!--android:progress="0"-->
+        <!--android:progressDrawable="@drawable/custom_progressbar_drawable"-->
+        <!--android:secondaryProgress="0"-->
+        <!--android:visibility="invisible"/>-->
 
-    <TextView
-        android:id="@+id/progressLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/playPauseButton"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        android:text="status" />
+    <!--<TextView-->
+        <!--android:id="@+id/progressLabel"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@+id/playPauseButton"-->
+        <!--android:layout_centerHorizontal="true"-->
+        <!--android:layout_marginTop="5dp"-->
+        <!--android:text="status" />-->
+
+    <com.denys.hlsplayer.view.PlayerView
+      android:id="@+id/player_view"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_centerInParent="true"/>
 
 </RelativeLayout>
