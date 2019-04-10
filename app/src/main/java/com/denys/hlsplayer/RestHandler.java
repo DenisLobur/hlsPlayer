@@ -1,6 +1,9 @@
 package com.denys.hlsplayer;
 
+import android.text.TextUtils;
 import android.util.Log;
+
+import com.denys.hlsplayer.parser.PlayListParser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,8 +17,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class RestHandler {
   private static final String TAG = "HTTP_HANDLER";
   private static final String BASE_URL = "http://pubcache1.arkiva.de/test/";
+  private static final String MAIN_PLAYLIST_URI = "hls_index.m3u8";
+
+  private PlayListParser playListParser;
 
   public RestHandler() {
+    playListParser = new PlayListParser();
 
     ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
 
@@ -27,7 +34,7 @@ public class RestHandler {
 
   }
 
-  private static class Task implements Runnable {
+  private class Task implements Runnable {
     private String name;
 
     public Task(String name) {
@@ -46,13 +53,14 @@ public class RestHandler {
 //      }
       try {
         Log.d(TAG, "Executing: " + name + " on thread: " + Thread.currentThread().getName());
-        makeHttpRequest("", "");
+        StringBuilder sb = makeHttpRequest(MAIN_PLAYLIST_URI, "");
+        playListParser.writeToFile(sb);
       } catch (IOException e) {
         Log.d(TAG, e.getMessage());
       }
     }
 
-    private String makeHttpRequest(String uri, String range) throws IOException {
+    private StringBuilder makeHttpRequest(String uri, String range) throws IOException {
       BufferedReader reader = null;
       URL url = null;
       HttpURLConnection urlConnection = null;
@@ -64,7 +72,7 @@ public class RestHandler {
       try {
         urlConnection = (HttpURLConnection) url.openConnection();
         urlConnection.setRequestMethod("GET");
-        if (range != null) {
+        if (!TextUtils.isEmpty(range)) {
           urlConnection.setRequestProperty("Range:", "bytes=" + range);
         }
         urlConnection.connect();
@@ -76,7 +84,7 @@ public class RestHandler {
           buf.append(line + "\n");
         }
 
-        return (buf.toString());
+        return buf;
       } finally {
         if (urlConnection != null) {
           urlConnection.disconnect();
@@ -84,4 +92,6 @@ public class RestHandler {
       }
     }
   }
+
+
 }
