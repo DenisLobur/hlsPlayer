@@ -1,4 +1,4 @@
-package com.denys.hlsplayer;
+package com.denys.hlsplayer.view;
 
 import android.Manifest;
 import android.app.Activity;
@@ -19,13 +19,11 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.denys.hlsplayer.parser.PlayListParser;
-import com.denys.hlsplayer.view.PlayerView;
+import com.denys.hlsplayer.R;
+import com.denys.hlsplayer.presenter.MainPresenter;
+import com.denys.hlsplayer.util.PlayerState;
 
-import java.util.Iterator;
-import java.util.List;
-
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener, MainPresenter.MainView {
   private static final String TAG = "CUSTOM_VIEW";
 
   private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -46,11 +44,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
   private int windowHeight;
   private Animation animation;
   private RelativeLayout mainLayout;
+  private MainPresenter presenter;
 
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     mainLayout = findViewById(R.id.root_view);
+    presenter = new MainPresenter(this);
 
     Display display = getWindowManager().getDefaultDisplay();
     Point size = new Point();
@@ -65,12 +65,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     animation = AnimationUtils.loadAnimation(this, R.anim.accel_deaccel_anim);
 
     verifyStoragePermissions(this);
-
-    RestHandler restHandler = new RestHandler();
-    PlayListParser playListParser = new PlayListParser();
-    List<String> lines = playListParser.readFromFile("/storage/emulated/0/Android/data/main_playlist.txt");
-    Iterator<String> itr = lines.iterator();
-    while (itr.hasNext()) System.out.println("parsed: " + itr.next());
 
     progressLabel = findViewById(R.id.progressLabel);
     progressBar = findViewById(R.id.progressBar);
@@ -91,7 +85,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
       if (currentState == PlayerState.UNINITIALIZED || currentState == PlayerState.COMPLITED) {
         currentState = PlayerState.FETCHING;
         progressBar.setVisibility(View.VISIBLE);
-        fetchAudio().start();
+        //fetchAudio().start();
+        presenter.fetchMainPlaylist();
       } else if (currentState == PlayerState.PLAYING) {
         currentState = PlayerState.PAUSED;
       } else {
@@ -210,6 +205,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     return true;
+
+  }
+
+
+  //TODO: implement
+  @Override
+  public void runFetching() {
 
   }
 }
