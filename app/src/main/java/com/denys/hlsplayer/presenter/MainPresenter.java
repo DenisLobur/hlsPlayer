@@ -1,5 +1,7 @@
 package com.denys.hlsplayer.presenter;
 
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import com.denys.hlsplayer.model.AudioFileModel;
@@ -11,6 +13,7 @@ import com.denys.hlsplayer.util.CompareAudioQuality;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class MainPresenter {
@@ -22,12 +25,13 @@ public class MainPresenter {
   private Future<StringBuilder> mainPlayListFurure;
   private List<MainPlaylistModel> audioList = Collections.emptyList();
   private List<AudioFileModel> rangeList = Collections.emptyList();
+  private Handler handler;
 
-
-  public MainPresenter(MainView mainView) {
+  public MainPresenter(MainView mainView, Handler handler) {
     this.mainView = mainView;
     restHandler = new RestHandler();
     playListParser = new PlayListParser();
+    this.handler = handler;
   }
 
   public void fetchMainPlaylist() {
@@ -78,7 +82,20 @@ public class MainPresenter {
 
   public void fetchAudioChunks(String audioFileEndpoint, List<AudioFileModel> rangeList) {
     Log.d(TAG, "audioFileEndpoint: " + audioFileEndpoint);
-    restHandler.getAudioChunk(audioFileEndpoint, rangeList);
+    double percent = 100.0/rangeList.size();
+    for(int i = 0; i < rangeList.size(); i++) {
+      try {
+        long start = System.currentTimeMillis();
+        restHandler.getAudioChunk(audioFileEndpoint, rangeList.get(i).getRange(), handler, i*percent);
+        long end = System.currentTimeMillis();
+        Log.d("elapsed", "millis: "+(end - start));
+
+        mainView.updateSpinner(i);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
   }
 
   public void saveAudioChunksToFile() {
@@ -99,6 +116,6 @@ public class MainPresenter {
 
 
   public interface MainView {
-    void runFetching();
+    void updateSpinner(int progress);
   }
 }

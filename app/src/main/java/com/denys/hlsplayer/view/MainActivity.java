@@ -7,8 +7,10 @@ import android.graphics.Point;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
   private TextView progressLabel;
   private ProgressBar progressBar;
   private int pStatus = 0;
-  private Handler handler = new Handler();
+  private Handler handler;
   private ImageButton playPauseButton;
   private PlayerState currentState;
   private MediaPlayer mediaPlayer;
@@ -43,14 +45,25 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
   private int windowWidth;
   private int windowHeight;
   private Animation animation;
-  private RelativeLayout mainLayout;
   private MainPresenter presenter;
 
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-    mainLayout = findViewById(R.id.root_view);
-    presenter = new MainPresenter(this);
+    handler = new Handler() {
+      @Override
+      public void handleMessage(Message msg) {
+        super.handleMessage(msg);
+        int msgValue = msg.what;
+        if (msgValue > 92){
+          msgValue = 100;
+        }
+        progressBar.setProgress(msgValue);
+        String txt = String.format(getString(R.string.current_state_fetching), msgValue);
+        progressLabel.setText(txt);
+      }
+    };
+    presenter = new MainPresenter(this, handler);
 
     Display display = getWindowManager().getDefaultDisplay();
     Point size = new Point();
@@ -105,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         break;
       case FETCHING:
         playPauseButton.setVisibility(View.INVISIBLE);
-        progressLabel.setText(R.string.current_state_fetching);
         break;
       case PLAYING:
         playPauseButton.setImageResource(R.drawable.round_pause);
@@ -130,34 +142,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     } else if (state == PlayerState.PAUSED) {
       mediaPlayer.pause();
     }
-  }
-
-  private Thread fetchAudio() {
-    Thread fetchingThread = new Thread(() -> {
-      while (pStatus <= 100) {
-        handler.post(() -> {
-          progressBar.setProgress(pStatus);
-          String txt = String.format(getString(R.string.current_state_fetching), pStatus);
-          progressLabel.setText(txt);
-        });
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        pStatus++;
-      }
-
-      handler.post(() -> {
-        progressBar.setVisibility(View.INVISIBLE);
-        playPauseButton.setVisibility(View.VISIBLE);
-        currentState = PlayerState.PLAYING;
-        changePlayerState(currentState);
-        playMusic(currentState);
-      });
-    });
-
-    return fetchingThread;
   }
 
   private static void verifyStoragePermissions(Activity activity) {
@@ -208,10 +192,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
   }
 
-
-  //TODO: implement
   @Override
-  public void runFetching() {
+  public void updateSpinner(int progress) {
 
   }
 }

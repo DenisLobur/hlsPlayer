@@ -1,9 +1,10 @@
 package com.denys.hlsplayer.rest;
 
+import android.os.Handler;
+import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.denys.hlsplayer.model.AudioFileModel;
 import com.denys.hlsplayer.parser.PlayListParser;
 
 import java.io.BufferedReader;
@@ -12,7 +13,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -42,23 +42,27 @@ public class RestHandler {
     return threadPoolExecutor.submit(task);
   }
 
-  public void getAudioChunk(String audioFileEndpoint, List<AudioFileModel> rangeList) {
-    for (int i = 0; i < rangeList.size(); i++) {
-      Task task = new Task("Task: " + i, audioFileEndpoint, rangeList.get(i).getRange());
+  public void getAudioChunk(String audioFileEndpoint, String range, Handler handler, double progress) {
+      Task task = new Task("Task: " + range, audioFileEndpoint, range, handler, progress);
       threadPoolExecutor.execute(task);
-    }
-    threadPoolExecutor.shutdown();
+      if (progress > 95) {
+        threadPoolExecutor.shutdown();
+      }
   }
 
   private class Task implements Runnable {
     private String name;
     private String uri;
     private String range;
+    private Handler handler;
+    private double progress;
 
-    public Task(String name, String uri, String range) {
+    public Task(String name, String uri, String range, Handler handler, double progress) {
       this.name = name;
       this.uri = uri;
       this.range = range;
+      this.handler = handler;
+      this.progress = progress;
     }
 
     @Override
@@ -66,6 +70,10 @@ public class RestHandler {
       try {
         Log.d(TAG, "Executing: " + name + " on thread: " + Thread.currentThread().getName());
         makeAsyncHttpRequest(uri, range);
+        Message message = new Message();
+        message.what = (int)progress;
+        Log.d(TAG, "percent: "+progress);
+        handler.sendMessage(message);
       } catch (IOException e) {
         Log.d(TAG, e.getMessage());
       }
