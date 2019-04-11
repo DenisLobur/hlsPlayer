@@ -12,7 +12,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -23,18 +22,14 @@ public class RestHandler {
   private static final String TAG = "HTTP_HANDLER";
   private static final String BASE_URL = "http://pubcache1.arkiva.de/test/";
   private static final String MAIN_PLAYLIST_URI = "hls_index.m3u8";
+  private static final int THREADS = 2;
 
   private PlayListParser playListParser;
   private ThreadPoolExecutor threadPoolExecutor;
 
   public RestHandler() {
     playListParser = new PlayListParser();
-
-    threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
-    //Task task = new Task("Fetching main playlist");
-    //threadPoolExecutor.execute(task);
-
-    //threadPoolExecutor.shutdown();
+    threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(THREADS);
   }
 
   public Future<StringBuilder> getPlayList(String name) throws Exception {
@@ -48,14 +43,8 @@ public class RestHandler {
   }
 
   public void getAudioChunk(String audioFileEndpoint, List<AudioFileModel> rangeList) {
-    List<String> testRange = new ArrayList<>();
-    for (int i = 0; i < 10; i++) {
-      testRange.add("" + i + "-" + i + 2);
-    }
-
-    //TODO: range list size here
     for (int i = 0; i < rangeList.size(); i++) {
-      Task task = new Task(audioFileEndpoint, audioFileEndpoint, rangeList.get(i).getRange());
+      Task task = new Task("Task: " + i, audioFileEndpoint, rangeList.get(i).getRange());
       threadPoolExecutor.execute(task);
     }
     threadPoolExecutor.shutdown();
@@ -75,7 +64,7 @@ public class RestHandler {
     @Override
     public void run() {
       try {
-        Log.d(TAG, "Executing: " + range + " on thread: " + Thread.currentThread().getName());
+        Log.d(TAG, "Executing: " + name + " on thread: " + Thread.currentThread().getName());
         makeAsyncHttpRequest(uri, range);
       } catch (IOException e) {
         Log.d(TAG, e.getMessage());
@@ -107,24 +96,6 @@ public class RestHandler {
       return sb;
     }
   }
-
-  /*private class FetchAudioFileTask implements Callable<StringBuilder>{
-    private String name;
-    private String fileURI;
-
-    FetchAudioFileTask(String name, String fileURI) {
-      this.name = name;
-      this.fileURI = fileURI;
-    }
-
-    @Override
-    public StringBuilder call() throws Exception {
-      Log.d(TAG, "Executing callable: " + name + " on thread: " + Thread.currentThread().getName());
-      StringBuilder sb = makeHttpRequest(fileURI, "");
-
-      return sb;
-    }
-  }*/
 
   private StringBuilder makeHttpRequest(String uri) throws IOException {
     return makeHttpRequest(uri, null);
@@ -164,6 +135,7 @@ public class RestHandler {
 
   private synchronized void makeAsyncHttpRequest(String uri, String range) throws IOException {
     String requestRange = "bytes=" + range;
+    Log.d(TAG, "Fetching range: " + range);
     BufferedReader reader = null;
     URL url = null;
     HttpURLConnection urlConnection = null;
@@ -179,19 +151,6 @@ public class RestHandler {
       urlConnection.setRequestProperty("Range", requestRange);
       urlConnection.connect();
       playListParser.writeStreamToFile(urlConnection.getInputStream());
-//      InputStream inputStream = urlConnection.getInputStream();
-//      reader = new BufferedReader(new InputStreamReader(inputStream));
-//      int size = 0;
-//      while(inputStream.read() != -1) size++;
-//      Log.d(TAG, "IS size: " + size);
-//      Log.d(TAG, "Response Code: " + urlConnection.getResponseCode());
-//      Log.d(TAG, "Content-Length: " + urlConnection.getContentLength());
-//      StringBuilder buf = new StringBuilder();
-//      String line = null;
-//      while ((line = reader.readLine()) != null) {
-//        Log.d(TAG, line + "\n");
-//        buf.append(line + "\n");
-//      }
     } catch (Exception e) {
       Log.d(TAG, e.getMessage());
     } finally {
@@ -200,6 +159,4 @@ public class RestHandler {
       }
     }
   }
-
-
 }

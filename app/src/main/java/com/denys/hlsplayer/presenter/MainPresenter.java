@@ -71,14 +71,10 @@ public class MainPresenter {
       playListParser.writeToFile(sb, fileName);
       rangeList = playListParser.parseAudioPlayList(fileName);
       fetchAudioChunks(playListParser.getAudioFileEndpoint(), rangeList);
-      //rangeList.forEach(item -> Log.d(TAG, item.getRange().toString()));
-      //fetchAudioFile(audioFileURI);
     } catch (IOException e) {
       Log.d(TAG, e.getMessage());
     }
   }
-
-
 
   public void fetchAudioChunks(String audioFileEndpoint, List<AudioFileModel> rangeList) {
     Log.d(TAG, "audioFileEndpoint: " + audioFileEndpoint);

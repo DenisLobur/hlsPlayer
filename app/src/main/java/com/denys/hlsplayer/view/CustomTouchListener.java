@@ -8,6 +8,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
+//TODO: works with Fling gesture
 public class CustomTouchListener implements View.OnTouchListener {
   private static final String TAG = "SWIPE";
   private static final int MIN_DISTANCE_MOVED = 50;

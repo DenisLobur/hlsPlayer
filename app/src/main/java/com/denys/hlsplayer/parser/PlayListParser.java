@@ -34,18 +34,12 @@ public class PlayListParser {
     Log.d(TAG, "writing to file");
     Log.d(TAG, "dirs: " + Environment.getExternalStorageDirectory().toPath());
     BufferedWriter bwr = new BufferedWriter(new FileWriter(new File("/storage/emulated/0/Android/data/" + fileName)));
-
-    //write contents of StringBuffer to a file
     bwr.write(sb.toString());
-
-    //flush the stream
     bwr.flush();
-
-    //close the stream
     bwr.close();
   }
 
-  public synchronized void writeStreamToFile(InputStream inputStream) throws Exception{
+  public synchronized void writeStreamToFile(InputStream inputStream) throws Exception {
     Log.d(TAG, "here: +" + Thread.currentThread().getName());
     try {
       File file = new File("/storage/emulated/0/Android/data/raw_media.txt");
@@ -103,7 +97,7 @@ public class PlayListParser {
         String range = parseAudioRangeLine(line);
         audioFileRanges.add(new AudioFileModel(range));
       }
-      if(line.contains(".ts")){
+      if (line.contains(".ts")) {
         audioFileEndPoint = line;
       }
     }
@@ -111,7 +105,7 @@ public class PlayListParser {
     return audioFileRanges;
   }
 
-  public String getAudioFileEndpoint(){
+  public String getAudioFileEndpoint() {
     return audioFileEndPoint;
   }
 
@@ -133,13 +127,13 @@ public class PlayListParser {
   private String parseAudioRangeLine(String line) {
     String range = "";
     String chunks[] = line.split(":");
-    for(String chunk: chunks){
-      if(chunk.contains("@")){
+    for (String chunk : chunks) {
+      if (chunk.contains("@")) {
         range = chunk.replace("@", "-");
       }
     }
 
-    return range;
+    return reArrange(range);
   }
 
   private String parseStringChunk(String chunk) {
@@ -148,5 +142,22 @@ public class PlayListParser {
     chunk = chunk.substring(0, chunk.indexOf("\""));
     Log.d(TAG, "chunk after: " + chunk);
     return chunk;
+  }
+
+  private String reArrange(String range) {
+    String[] wrongRange = range.split("-");
+    int from = Integer.parseInt(wrongRange[0]);
+    int to = Integer.parseInt(wrongRange[1]);
+    if (from > to) {
+      Log.d(TAG, "before rearrange: " + from + "-" + to);
+      int temp = from;
+      from = to;
+      to = temp;
+      Log.d(TAG, "after rearrange: " + from + "-" + to);
+    } else {
+      Log.d(TAG, "No rearrange required for " + from + "-" + to);
+    }
+
+    return from + "-" + to;
   }
 }
