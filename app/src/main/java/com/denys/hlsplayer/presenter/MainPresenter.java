@@ -1,7 +1,6 @@
 package com.denys.hlsplayer.presenter;
 
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import com.denys.hlsplayer.model.AudioFileModel;
@@ -10,10 +9,10 @@ import com.denys.hlsplayer.parser.PlayListParser;
 import com.denys.hlsplayer.rest.RestHandler;
 import com.denys.hlsplayer.util.CompareAudioQuality;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class MainPresenter {
@@ -54,7 +53,6 @@ public class MainPresenter {
     } catch (Exception e) {
       Log.d(TAG, e.getMessage());
     }
-
   }
 
   private void savePlayListToFile(StringBuilder sb, String fileName) {
@@ -89,33 +87,22 @@ public class MainPresenter {
         restHandler.getAudioChunk(audioFileEndpoint, rangeList.get(i).getRange(), handler, i*percent);
         long end = System.currentTimeMillis();
         Log.d("elapsed", "millis: "+(end - start));
-
-        mainView.updateSpinner(i);
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
-
-  }
-
-  public void saveAudioChunksToFile() {
-
   }
 
   public void deleteAllCachedFiles() {
-
+    File f1 = new File("/storage/emulated/0/Android/data/raw_media.txt");
+    File f2 = new File("/storage/emulated/0/Android/data/main_playlist.txt");
+    File f3 = new File("/storage/emulated/0/Android/data/audio_to_parse.txt");
+    if(f1.delete() && f2.delete() && f3.delete()){
+      Log.d(TAG, "deleted");
+    }
   }
-
-  public void playLocalAudioFile() {
-//    mainView.
-  }
-
-  public void updateFetchingProgress() {
-
-  }
-
 
   public interface MainView {
-    void updateSpinner(int progress);
+    void updateUI();
   }
 }

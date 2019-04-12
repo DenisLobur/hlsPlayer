@@ -46,7 +46,7 @@ public class RestHandler {
       Task task = new Task("Task: " + range, audioFileEndpoint, range, handler, progress);
       threadPoolExecutor.execute(task);
       if (progress > 95) {
-        threadPoolExecutor.shutdown();
+        //threadPoolExecutor.shutdown();
       }
   }
 

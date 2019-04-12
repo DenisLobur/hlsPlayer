@@ -61,6 +61,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         progressBar.setProgress(msgValue);
         String txt = String.format(getString(R.string.current_state_fetching), msgValue);
         progressLabel.setText(txt);
+        if (msgValue > 99){
+          currentState = PlayerState.PLAYING;
+          changePlayerState(currentState);
+        }
       }
     };
     presenter = new MainPresenter(this, handler);
@@ -89,7 +93,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     mediaPlayer = MediaPlayer.create(this, R.raw.audio_sample);
 
     mediaPlayer.setOnCompletionListener(mp -> {
-      pStatus = 0;
       currentState = PlayerState.COMPLITED;
       changePlayerState(currentState);
     });
@@ -98,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
       if (currentState == PlayerState.UNINITIALIZED || currentState == PlayerState.COMPLITED) {
         currentState = PlayerState.FETCHING;
         progressBar.setVisibility(View.VISIBLE);
-        //fetchAudio().start();
         presenter.fetchMainPlaylist();
       } else if (currentState == PlayerState.PLAYING) {
         currentState = PlayerState.PAUSED;
@@ -121,7 +123,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         break;
       case PLAYING:
         playPauseButton.setImageResource(R.drawable.round_pause);
+        playPauseButton.setVisibility(View.VISIBLE);
         progressLabel.setText(R.string.current_state_playing);
+        progressBar.setVisibility(View.INVISIBLE);
+        playMusic(currentState);
         break;
       case PAUSED:
         playPauseButton.setImageResource(R.drawable.round_play);
@@ -130,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
       case COMPLITED:
         playPauseButton.setImageResource(R.drawable.round_play);
         progressLabel.setText(R.string.current_state_completed);
+        presenter.deleteAllCachedFiles();
       default:
         //
         break;
@@ -193,7 +199,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
   }
 
   @Override
-  public void updateSpinner(int progress) {
-
+  public void updateUI() {
+    playPauseButton.setVisibility(View.VISIBLE);
+    progressLabel.setVisibility(View.INVISIBLE);
   }
 }
